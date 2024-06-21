@@ -1,0 +1,70 @@
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+string HTMLElements(string str) {
+    vector<string> elements;
+    string temp;
+
+    // Extract HTML tags
+    for (int x = 0; x < str.length(); x++) {
+        if (str[x] == '>') {
+            temp += str[x];
+            elements.push_back(temp);
+            temp.clear();
+        } else if (str[x] == '<' || !temp.empty()) {
+            temp += str[x];
+        }
+    }
+
+    if (elements.size() == 1) {
+        elements[0].erase(elements[0].begin());
+        elements[0].erase(elements[0].end() - 1);
+        return elements[0];
+    }
+
+    vector<string> stack;
+    for (int x = 0; x < elements.size(); x++) {
+        if (elements[x][1] != '/') { // Opening tag
+            stack.push_back(elements[x]);
+        } else { // Closing tag
+            if (stack.empty()) {
+                elements[x].erase(elements[x].begin());
+                elements[x].erase(elements[x].end() - 1);
+                return elements[x].substr(1); // Remove '/'
+            }
+            string openTag = stack.back();
+            stack.pop_back();
+            string closeTag = elements[x];
+            closeTag.insert(1, "/");
+            if (openTag != closeTag) {
+                openTag.erase(openTag.begin());
+                openTag.erase(openTag.end() - 1);
+                return openTag;
+            }
+        }
+    }
+
+    if (!stack.empty()) {
+        string remainingTag = stack.back();
+        remainingTag.erase(remainingTag.begin());
+        remainingTag.erase(remainingTag.end() - 1);
+        return remainingTag;
+    }
+
+    return "true";
+}
+
+int main() {
+    cout << HTMLElements("<div><b><p>hello world</p></b></div>") << endl; // true
+    cout << HTMLElements("<div><i>hello</i>world</b>") << endl; // div
+    cout << HTMLElements("<div><div><b></b></div></p>") << endl; // div
+    cout << HTMLElements("<div>abc</div><p><em><i>test test test</b></em></p>") << endl; // i
+    cout << HTMLElements("hello world<p></p><div><em><b></b></em></p>") << endl; // div
+    cout << HTMLElements("<div>") << endl; // div
+    cout << HTMLElements("<p><p><em></em><p></p><i></p>") << endl; // i
+    cout << HTMLElements("<em></em><em></em><p></b>") << endl; // p
+
+    return 0;
+}
